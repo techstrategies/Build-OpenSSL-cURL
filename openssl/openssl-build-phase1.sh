@@ -565,6 +565,7 @@ lipo \
 	"/tmp/${OPENSSL_VERSION}-tvOS-Simulator-x86_64/lib/libssl.a" \
 	-create -output tvOS-simulator/lib/libssl.a
 
+libtool -no_warning_for_no_symbols -static -o openssl-mac-x86_64_arm64.a Mac/lib/libcrypto.a Mac/lib/libssl.a
 if [ $catalyst == "1" ]; then
 	libtool -no_warning_for_no_symbols -static -o openssl-ios-x86_64-maccatalyst.a Catalyst/lib/libcrypto.a Catalyst/lib/libssl.a
 fi
