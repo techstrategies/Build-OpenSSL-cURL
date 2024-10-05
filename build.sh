@@ -16,6 +16,7 @@ set -e
 #OPENSSL="1.1.1u"	# https://www.openssl.org/source/ 
 OPENSSL="3.0.13"	# https://www.openssl.org/source/ 
 LIBCURL="8.7.1"		# https://curl.haxx.se/download.html
+LIBSSH2="1.11.0"	# https://libssh2.org/
 NGHTTP2="1.60.0"	# https://nghttp2.org/
 
 ################################################
@@ -49,6 +50,7 @@ fi
 # Global flags
 engine=""
 buildnghttp2="-n"
+buildlibssh2="-f"
 disablebitcode=""
 colorflag=""
 catalyst=""
@@ -74,12 +76,14 @@ usage ()
     echo
 	echo -e "${bold}Usage:${normal}"
 	echo
-	echo -e "  ${subbold}$0${normal} [-o ${dim}<OpenSSL version>${normal}] [-c ${dim}<curl version>${normal}] [-n ${dim}<nghttp2 version>${normal}] [-d] [-e] [-3] [-x] [-h] [...]"
+	echo -e "  ${subbold}$0${normal} [-o ${dim}<OpenSSL version>${normal}] [-c ${dim}<curl version>${normal}] [-n ${dim}<nghttp2 version>${normal}] [-p ${dim}<libssh2 version>${normal}] [-d] [-e] [-3] [-x] [-h] [...]"
 	echo
 	echo "         -o <version>   Build OpenSSL version (default $OPENSSL)"
 	echo "         -c <version>   Build curl version (default $LIBCURL)"
 	echo "         -n <version>   Build nghttp2 version (default $NGHTTP2)"
+	echo "         -p <version>   Build libssh2 version (default $LIBSSH2)"
 	echo "         -d             Compile without HTTP2 support"
+	echo "         -f             Compile without LIBSSH2 support"
 	echo "         -e             Compile with OpenSSL engine support"
 	echo "         -b             Compile without bitcode"
 	echo "         -m             Compile Mac Catalyst library"
@@ -96,7 +100,7 @@ usage ()
 }
 
 # Process command line arguments
-while getopts "o:c:n:u:s:t:i:a:debm3xh\?" o; do
+while getopts "o:c:n:p:u:s:t:i:a:dfebm3xh\?" o; do
     case "${o}" in
 		o)
 			OPENSSL="${OPTARG}"
@@ -109,6 +113,9 @@ while getopts "o:c:n:u:s:t:i:a:debm3xh\?" o; do
 			;;
 		d)
 			buildnghttp2=""
+			;;
+		f)
+			buildlibssh2=""
 			;;
 		e)
 			engine="-e"
@@ -167,9 +174,9 @@ OSARGS="-s ${IOS_MIN_SDK_VERSION} -t ${TVOS_MIN_SDK_VERSION} -i ${MACOS_X86_64_V
 ## Welcome
 echo -e "${bold}Build-OpenSSL-cURL${dim}"
 if [ "$catalyst" != "" ]; then
-	echo "This script builds OpenSSL, nghttp2 and libcurl for MacOS, Catalyst, iOS and tvOS devices."
+	echo "This script builds OpenSSL, nghttp2, libssh2 and libcurl for MacOS, Catalyst, iOS and tvOS devices."
 else
-	echo "This script builds OpenSSL, nghttp2 and libcurl for MacOS, iOS and tvOS devices."
+	echo "This script builds OpenSSL, nghttp2, libssh2 and libcurl for MacOS, iOS and tvOS devices."
 fi
 echo "Targets: x86_64, armv7, armv7s, arm64 and arm64e"
 
@@ -188,6 +195,17 @@ echo -e "${bold}Building OpenSSL${normal}"
 ./openssl-build.sh -v "$OPENSSL" $engine $colorflag $catalyst $sslv3 $OSARGS
 cd ..
 
+## LibSSH2 Build
+if [ "$buildlibssh2" == "" ]; then
+	LIBSSH2="NONE"
+else
+	echo
+	cd libssh2
+	echo -e "${bold}Building libssh2 for SFTP support${normal}"
+	./libssh2-build.sh -v "$LIBSSH2" $colorflag $catalyst $OSARGS
+	cd ..
+fi
+
 ## Nghttp2 Build
 if [ "$buildnghttp2" == "" ]; then
 	NGHTTP2="NONE"
@@ -203,7 +221,7 @@ fi
 echo
 echo -e "${bold}Building Curl${normal}"
 cd curl
-./libcurl-build.sh -v "$LIBCURL" $disablebitcode $colorflag $buildnghttp2 $catalyst $sslv3 $OSARGS
+./libcurl-build.sh -v "$LIBCURL" $disablebitcode $colorflag $buildnghttp2 $buildlibssh2 $catalyst $sslv3 $OSARGS
 cd ..
 
 ## Archive Libraries and Clean Up
@@ -212,6 +230,11 @@ echo -e "${bold}Libraries...${normal}"
 echo
 echo -e "${subbold}openssl${normal} [${dim}$OPENSSL${normal}]${dim}"
 xcrun -sdk iphoneos lipo -info openssl/*/lib/*.a
+if [ "$buildlibssh2" != "" ]; then
+	echo
+	echo -e "${subbold}libssh2 (rename to libssh2.a)${normal} [${dim}$LIBSSH2${normal}]${dim}"
+	xcrun -sdk iphoneos lipo -info libssh2/lib/*.a
+fi
 if [ "$buildnghttp2" != "" ]; then
 	echo
 	echo -e "${subbold}nghttp2 (rename to libnghttp2.a)${normal} [${dim}$NGHTTP2${normal}]${dim}"

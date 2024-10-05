@@ -70,6 +70,12 @@ example/iOS\ Test\ App/libs/
 # Build directories
 ######################
 curl/include
+libssh2/iOS-simulator
+libssh2/iOS
+libssh2/lib
+libssh2/Mac
+libssh2/tvOS
+libssh2/tvOS-simulator
 nghttp2/iOS-simulator
 nghttp2/iOS
 nghttp2/lib
