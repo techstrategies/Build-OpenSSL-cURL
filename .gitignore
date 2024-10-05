@@ -48,10 +48,37 @@ archive/
 libcrypto.a
 libcurl.a
 libnghttp2.a
+libnghttp2.a
 libssl.a
 libcurl_Catalyst.a
+libcurl_iOS-fat.a
+libcurl_iOS-simulator.a
+libcurl_iOS.a
+libcurl_Mac.a
+libcurl_tvOS-fat.a
+libcurl_tvOS-simulator.a
+libcurl_tvOS.a
 libnghttp2_Catalyst.a
+openssl-ios-armv7_armv7s_arm64_arm64e.a
+openssl-ios-i386_x86_64_arm64-simulator.a
 openssl-ios-x86_64-maccatalyst.a
+openssl-mac-x86_64_arm64.a
 releases
 sandbox/
 example/iOS\ Test\ App/libs/
+
+# Build directories
+######################
+curl/include
+nghttp2/iOS-simulator
+nghttp2/iOS
+nghttp2/lib
+nghttp2/Mac
+nghttp2/tvOS
+nghttp2/tvOS-simulator
+openssl/iOS/include
+openssl/iOS-fat/include
+openssl/iOS-simulator/include
+openssl/Mac/include
+openssl/tvOS/include
+openssl/tvOS-simulator/include
