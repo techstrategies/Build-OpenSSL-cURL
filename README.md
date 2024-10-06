@@ -74,10 +74,10 @@ You can update the default version by editing this section in the `build.sh` scr
 # EDIT this section to Select Default Versions #
 ################################################
 
-OPENSSL="3.0.9"         # https://www.openssl.org/source/
-LIBCURL="8.1.2"        # https://curl.haxx.se/download.html
-NGHTTP2="1.55.1"        # https://nghttp2.org/
+OPENSSL="3.0.13"	# https://www.openssl.org/source/ 
+LIBCURL="8.10.1"	# https://curl.haxx.se/download.html
 LIBSSH2="1.11.0"	# https://libssh2.org/
+NGHTTP2="1.60.0"	# https://nghttp2.org/
 
 ################################################
 ```
