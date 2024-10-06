@@ -34,7 +34,7 @@ alertdim="\033[0m${red}\033[2m"
 trap 'echo -e "${alert}** ERROR with Build - Check /tmp/curl*.log${alertdim}"; tail -30 /tmp/curl*.log' INT TERM EXIT
 
 # Set defaults
-CURL_VERSION="curl-7.74.0"
+CURL_VERSION="curl-8.10.1"
 nohttp2="0"
 nolibssh2="2"
 catalyst="0"
