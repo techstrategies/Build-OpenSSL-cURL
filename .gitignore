@@ -70,6 +70,13 @@ example/iOS\ Test\ App/libs/
 # Build directories
 ######################
 curl/include
+libevent/include
+libevent/iOS-simulator
+libevent/iOS
+libevent/lib
+libevent/Mac
+libevent/tvOS
+libevent/tvOS-simulator
 libssh2/iOS-simulator
 libssh2/iOS
 libssh2/lib

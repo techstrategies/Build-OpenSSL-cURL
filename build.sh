@@ -17,6 +17,7 @@ LIBSSH2="1.11.0"	# https://libssh2.org/
 #OPENSSL="1.1.1u"		# https://www.openssl.org/source/ 
 OPENSSL="3.0.15"		# https://www.openssl.org/source/ 
 LIBCURL="8.10.1"		# https://curl.haxx.se/download.html
+LIBEVENT="2.1.12-stable"	# https://libevent.org/
 NGHTTP2="1.60.0"		# https://nghttp2.org/
 
 ################################################
@@ -51,6 +52,7 @@ fi
 engine=""
 buildnghttp2="-n"
 buildlibssh2="-f"
+buildlibevent="-o"
 disablebitcode=""
 colorflag=""
 catalyst=""
@@ -81,9 +83,11 @@ usage ()
 	echo "         -o <version>   Build OpenSSL version (default $OPENSSL)"
 	echo "         -c <version>   Build curl version (default $LIBCURL)"
 	echo "         -n <version>   Build nghttp2 version (default $NGHTTP2)"
+	echo "         -o <version>   Build libevent standalone library (default $LIBEVENT)"
 	echo "         -p <version>   Build libssh2 version (default $LIBSSH2)"
 	echo "         -d             Compile without HTTP2 support"
 	echo "         -f             Compile without LIBSSH2 support"
+	echo "         -g             Don't compile LIBEVENT library"
 	echo "         -e             Compile with OpenSSL engine support"
 	echo "         -b             Compile without bitcode"
 	echo "         -m             Compile Mac Catalyst library"
@@ -116,6 +120,9 @@ while getopts "o:c:n:p:u:s:t:i:a:dfebm3xh\?" o; do
 			;;
 		f)
 			buildlibssh2=""
+			;;
+		g)
+			buildlibevent=""
 			;;
 		e)
 			engine="-e"
@@ -195,6 +202,17 @@ echo -e "${bold}Building OpenSSL${normal}"
 ./openssl-build.sh -v "$OPENSSL" $engine $colorflag $catalyst $sslv3 $OSARGS
 cd ..
 
+## Libevent Build
+if [ "$buildlibevent" == "" ]; then
+	LIBEVENT="NONE"
+else
+	echo
+	cd libevent
+	echo -e "${bold}Building standalone libevent library${normal}"
+	./libevent-build.sh -v "$LIBEVENT" $colorflag $catalyst $OSARGS
+	cd ..
+fi
+
 ## LibSSH2 Build
 if [ "$buildlibssh2" == "" ]; then
 	LIBSSH2="NONE"
@@ -230,6 +248,11 @@ echo -e "${bold}Libraries...${normal}"
 echo
 echo -e "${subbold}openssl${normal} [${dim}$OPENSSL${normal}]${dim}"
 xcrun -sdk iphoneos lipo -info openssl/*/lib/*.a
+if [ "$buildlibevent" != "" ]; then
+	echo
+	echo -e "${subbold}libevent (rename to libevent.a)${normal} [${dim}$LIBEVENT${normal}]${dim}"
+	xcrun -sdk iphoneos lipo -info libevent/lib/*.a
+fi
 if [ "$buildlibssh2" != "" ]; then
 	echo
 	echo -e "${subbold}libssh2 (rename to libssh2.a)${normal} [${dim}$LIBSSH2${normal}]${dim}"
@@ -368,6 +391,36 @@ else
 fi
 
 cp openssl/*.a $ARCHIVE/framework
+
+# libraries for libevent
+if [ "$buildlibevent" != "" ]; then
+    # libevent libraries
+	cp libevent/lib/libevent_iOS.a $ARCHIVE/lib/iOS/libevent.a
+	cp libevent/lib/libevent_iOS-simulator.a $ARCHIVE/lib/iOS-simulator/libevent.a
+	cp libevent/lib/libevent_iOS-fat.a $ARCHIVE/lib/iOS-fat/libevent.a
+	cp libevent/lib/libevent_tvOS.a $ARCHIVE/lib/tvOS/libevent.a
+	cp libevent/lib/libevent_tvOS-simulator.a $ARCHIVE/lib/tvOS-simulator/libevent.a
+	cp libevent/lib/libevent_Mac.a $ARCHIVE/lib/MacOS/libevent.a
+	if [ "$catalyst" != "" ]; then
+		cp libevent/lib/libevent_Catalyst.a $ARCHIVE/lib/Catalyst/libevent.a
+		xcodebuild -create-xcframework \
+			-library $ARCHIVE/lib/iOS/libevent.a \
+			-library $ARCHIVE/lib/iOS-simulator/libevent.a \
+			-library $ARCHIVE/lib/tvOS/libevent.a \
+			-library $ARCHIVE/lib/tvOS-simulator/libevent.a \
+			-library $ARCHIVE/lib/Catalyst/libevent.a \
+            -library $ARCHIVE/lib/MacOS/libevent.a \
+			-output $ARCHIVE/xcframework/libevent.xcframework
+	else
+		xcodebuild -create-xcframework \
+			-library $ARCHIVE/lib/iOS/libevent.a \
+			-library $ARCHIVE/lib/iOS-simulator/libevent.a \
+			-library $ARCHIVE/lib/tvOS/libevent.a \
+			-library $ARCHIVE/lib/tvOS-simulator/libevent.a \
+            -library $ARCHIVE/lib/MacOS/libevent.a \
+			-output $ARCHIVE/xcframework/libevent.xcframework
+	fi
+fi
 
 # libraries for nghttp2
 if [ "$buildnghttp2" != "" ]; then
