@@ -39,7 +39,7 @@ nohttp2="0"
 nolibssh2="2"
 catalyst="0"
 FORCE_SSLV3="no"
-CONF_FLAGS="--without-libidn2 --disable-shared --enable-static -with-random=/dev/urandom --without-libpsl"
+CONF_FLAGS="--without-libidn2 --disable-shared --enable-static -with-random=/dev/urandom --without-libpsl --enable-http --enable-ftp --enable-smtp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --enable-proxy --disable-dict --enable-telnet --enable-tftp --enable-pop3 --enable-imap --enable-smb --disable-gopher --disable-manual --without-zlib"
 
 # Set minimum OS versions for target
 MACOS_X86_64_VERSION=""			# Empty = use host version
