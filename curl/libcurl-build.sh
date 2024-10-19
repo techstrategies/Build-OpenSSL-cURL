@@ -79,7 +79,7 @@ usage ()
 	echo "         -a   macOS arm64 min target version (default $MACOS_ARM64_VERSION)"
 	echo "         -b   compile without bitcode"
 	echo "         -n   compile with nghttp2"
-	echo "         -f   compile with libssh2"
+	echo "         -p   compile with libssh2"
 	echo "         -u   Mac Catalyst iOS min target version (default $CATALYST_IOS)"
 	echo "         -m   compile Mac Catalyst library [beta]"
 	echo "         -x   disable color output"
@@ -90,7 +90,7 @@ usage ()
 	exit 127
 }
 
-while getopts "v:s:t:i:a:u:nfmb3xh\?" o; do
+while getopts "v:s:t:i:a:u:npfmb3xh\?" o; do
     case "${o}" in
         v)
 			CURL_VERSION="curl-${OPTARG}"
@@ -110,7 +110,7 @@ while getopts "v:s:t:i:a:u:nfmb3xh\?" o; do
 		n)
 			nohttp2="1"
 			;;
-		f)
+		p)
 			nolibssh2="1"
 			;;
 		m)
@@ -143,6 +143,7 @@ done
 shift $((OPTIND-1))
 
 OPENSSL="${PWD}/../openssl"
+CURL="${PWD}/../curl"
 DEVELOPER=`xcode-select -print-path`
 
 # Semantic Version Comparison
@@ -290,6 +291,13 @@ buildMac()
 		echo -e "Testing binary for ${BUILD_MACHINE}:"
 		/tmp/curl -V
 	fi
+
+	# Clean up exports
+	export CC=""
+	export CXX=""
+	export CFLAGS=""
+	export LDFLAGS=""
+	export CPPFLAGS=""
 }
 
 buildCatalyst()
@@ -345,6 +353,14 @@ buildCatalyst()
 	make install >> "/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}.log" 2>&1
 	make clean >> "/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}.log" 2>&1
 	popd > /dev/null
+
+	# Clean up exports
+	export $PLATFORM=""
+	export CROSS_TOP=""
+	export CROSS_SDK=""
+	export CC=""
+	export CFLAGS=""
+	export LDFLAGS=""
 }
 
 
@@ -401,6 +417,14 @@ buildIOS()
 	make install >> "/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}.log" 2>&1
 	make clean >> "/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}.log" 2>&1
 	popd > /dev/null
+
+	# Clean up exports
+	export $PLATFORM=""
+	export CROSS_TOP=""
+	export CROSS_SDK=""
+	export CC=""
+	export CFLAGS=""
+	export LDFLAGS=""
 }
 
 buildIOSsim()
@@ -466,6 +490,16 @@ buildIOSsim()
 	make install >> "/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}.log" 2>&1
 	make clean >> "/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}.log" 2>&1
 	popd > /dev/null
+
+	# Clean up exports
+	export $PLATFORM=""
+	export CROSS_TOP=""
+	export CROSS_SDK=""
+	export CC=""
+	export CXX=""
+	export CFLAGS=""
+	export LDFLAGS=""
+	export CPPFLAGS=""
 }
 
 buildTVOS()
@@ -524,6 +558,14 @@ buildTVOS()
 	make install >> "/tmp/${CURL_VERSION}-tvOS-${ARCH}.log" 2>&1
 	make clean >> "/tmp/${CURL_VERSION}-tvOS-${ARCH}.log" 2>&1
 	popd > /dev/null
+
+	# Clean up exports
+	export $PLATFORM=""
+	export CROSS_TOP=""
+	export CROSS_SDK=""
+	export CC=""
+	export CFLAGS=""
+	export LDFLAGS=""
 }
 
 
@@ -587,6 +629,15 @@ buildTVOSsim()
 	make install >> "/tmp/${CURL_VERSION}-tvOS-simulator-${ARCH}.log" 2>&1
 	make clean >> "/tmp/${CURL_VERSION}-tvOS-simulator-${ARCH}.log" 2>&1
 	popd > /dev/null
+
+	# Clean up exports
+	export $PLATFORM=""
+	export SYSROOT=""
+	export CC=""
+	export CXX=""
+	export CFLAGS=""
+	export LDFLAGS=""
+	export CPPFLAGS=""
 }
 
 echo -e "${bold}Cleaning up${dim}"

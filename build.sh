@@ -13,11 +13,11 @@ set -e
 # EDIT this section to Select Default Versions #
 ################################################
 
-LIBSSH2="1.11.0"	# https://libssh2.org/
 #OPENSSL="1.1.1u"		# https://www.openssl.org/source/ 
 OPENSSL="3.0.15"		# https://www.openssl.org/source/ 
 LIBCURL="8.10.1"		# https://curl.haxx.se/download.html
 LIBEVENT="2.1.12-stable"	# https://libevent.org/
+LIBSSH2="1.11.0"		# https://libssh2.org/
 NGHTTP2="1.60.0"		# https://nghttp2.org/
 
 ################################################
@@ -51,8 +51,8 @@ fi
 # Global flags
 engine=""
 buildnghttp2="-n"
-buildlibssh2="-f"
 buildlibevent="-o"
+buildlibssh2="-p"
 disablebitcode=""
 colorflag=""
 catalyst=""
@@ -114,6 +114,9 @@ while getopts "o:c:n:p:u:s:t:i:a:dfebm3xh\?" o; do
 			;;
 		n)
 			NGHTTP2="${OPTARG}"
+			;;
+		p)
+			LIBSSH2="${OPTARG}"
 			;;
 		d)
 			buildnghttp2=""
@@ -419,6 +422,36 @@ if [ "$buildlibevent" != "" ]; then
 			-library $ARCHIVE/lib/tvOS-simulator/libevent.a \
             -library $ARCHIVE/lib/MacOS/libevent.a \
 			-output $ARCHIVE/xcframework/libevent.xcframework
+	fi
+fi
+
+# libraries for libssh2
+if [ "$buildlibssh2" != "" ]; then
+    # libssh2 libraries
+	cp libssh2/lib/libssh2_iOS.a $ARCHIVE/lib/iOS/libssh2.a
+	cp libssh2/lib/libssh2_iOS-simulator.a $ARCHIVE/lib/iOS-simulator/libssh2.a
+	cp libssh2/lib/libssh2_iOS-fat.a $ARCHIVE/lib/iOS-fat/libssh2.a
+	cp libssh2/lib/libssh2_tvOS.a $ARCHIVE/lib/tvOS/libssh2.a
+	cp libssh2/lib/libssh2_tvOS-simulator.a $ARCHIVE/lib/tvOS-simulator/libssh2.a
+	cp libssh2/lib/libssh2_Mac.a $ARCHIVE/lib/MacOS/libssh2.a
+	if [ "$catalyst" != "" ]; then
+		cp libssh2/lib/libssh2_Catalyst.a $ARCHIVE/lib/Catalyst/libssh2.a
+		xcodebuild -create-xcframework \
+			-library $ARCHIVE/lib/iOS/libssh2.a \
+			-library $ARCHIVE/lib/iOS-simulator/libssh2.a \
+			-library $ARCHIVE/lib/tvOS/libssh2.a \
+			-library $ARCHIVE/lib/tvOS-simulator/libssh2.a \
+			-library $ARCHIVE/lib/Catalyst/libssh2.a \
+            -library $ARCHIVE/lib/MacOS/libssh2.a \
+			-output $ARCHIVE/xcframework/libssh2.xcframework
+	else
+		xcodebuild -create-xcframework \
+			-library $ARCHIVE/lib/iOS/libssh2.a \
+			-library $ARCHIVE/lib/iOS-simulator/libssh2.a \
+			-library $ARCHIVE/lib/tvOS/libssh2.a \
+			-library $ARCHIVE/lib/tvOS-simulator/libssh2.a \
+            -library $ARCHIVE/lib/MacOS/libssh2.a \
+			-output $ARCHIVE/xcframework/libssh2.xcframework
 	fi
 fi
 
