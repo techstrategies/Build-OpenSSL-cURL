@@ -523,6 +523,8 @@ buildAndroid()
 	export CXX=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/${HOST}${ANDROID_API}-clang++
 	export LD=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/lld
 	export RANLIB=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-ranlib
+	export CFLAGS="-fPIC"
+	export CXXFLAGS="-fPIC"
 
 	echo -e "${subbold}Building ${LIBEVENT_VERSION} for ${archbold}${ARCH}${dim} (Android)"
 
@@ -542,6 +544,8 @@ buildAndroid()
 	export CXX=""
 	export LD=""
 	export RANLIB=""
+	export CFLAGS=""
+	export CXXFLAGS=""
 }
 
 echo -e "${bold}Cleaning up${dim}"
