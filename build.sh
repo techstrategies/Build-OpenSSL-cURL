@@ -293,6 +293,11 @@ mkdir -p "$ARCHIVE/bin"
 mkdir -p "$ARCHIVE/framework"
 mkdir -p "$ARCHIVE/xcframework"
 
+rm -f archive/libcurl-openssl-nghttp2-libssh2-libevent-latest
+cd archive
+ln -s "libcurl-$LIBCURL-openssl-$OPENSSL-nghttp2-$NGHTTP2-libssh2-$LIBSSH2-libevent-$LIBEVENT" libcurl-openssl-nghttp2-libssh2-libevent-latest
+cd ..
+
 # libraries for libcurl, libcrypto and libssl
 cp curl/lib/libcurl_iOS.a $ARCHIVE/lib/iOS/libcurl.a
 cp curl/lib/libcurl_iOS-simulator.a $ARCHIVE/lib/iOS-simulator/libcurl.a
