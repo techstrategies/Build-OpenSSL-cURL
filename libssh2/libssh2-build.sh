@@ -30,6 +30,7 @@ trap 'echo -e "${alert}** ERROR with Build - Check /tmp/libssh2*.log${alertdim}"
 
 # --- Edit this to update default version ---
 LIBSSH2_VERNUM="1.11.0"
+ANDROID_API_VERSION="28"		# Android API
 
 # Set defaults
 VERSION="1.1.1i"				# OpenSSL version default
@@ -485,14 +486,68 @@ buildTVOSsim()
 	export CPPFLAGS=""
 }
 
+buildAndroid()
+{
+	ARCH=$1
+	TARGET=$ARCH
+	ANDROID_API=$ANDROID_API_VERSION
+
+    if [ $ARCH == "android-arm" ]
+	then
+	    HOST=armv7a-linux-androideabi
+    elif [ $ARCH == "android-arm64" ]
+	then
+	    HOST=aarch64-linux-android
+    elif [ $ARCH == "android-x86" ]
+	then
+	    HOST=i686-linux-android
+    elif [ $ARCH == "android-x86_64" ]
+	then
+	    HOST=x86_64-linux-android
+    fi
+
+	export ANDROID_NDK_ROOT=$NDK_HOME
+	export CROSS_COMPILE=${HOST}-
+	export AR=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-ar
+	export CC=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/${HOST}${ANDROID_API}-clang
+	export CXX=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/${HOST}${ANDROID_API}-clang++
+	export LD=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/lld
+	export RANLIB=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-ranlib
+	export CFLAGS="-fPIC"
+	export CXXFLAGS="-fPIC"
+
+	echo -e "${subbold}Building ${LIBSSH2_VERSION} for ${archbold}${ARCH}${dim} (Android)"
+
+	pushd . > /dev/null
+	cd "${LIBSSH2_VERSION}"
+	./configure --host=$HOST --target=$TARGET --disable-shared --enable-static --without-libz --with-openssl --with-libssl-prefix="${LIBOPENSSL}/Android/${ARCH}" --prefix="${LIBSSH2}/Android/${ARCH}" &> "/tmp/${LIBSSH2_VERSION}-${ARCH}.log"
+	make -j${CORES} >> "/tmp/${LIBSSH2_VERSION}-${ARCH}.log" 2>&1
+	make install >> "/tmp/${LIBSSH2_VERSION}-${ARCH}.log" 2>&1
+	make clean >> "/tmp/${LIBSSH2_VERSION}-${ARCH}.log" 2>&1
+	popd > /dev/null
+
+	# Clean up exports
+	export ANDROID_NDK_ROOT=""
+	export CROSS_COMPILE=""
+	export AR=""
+	export CC=""
+	export CXX=""
+	export LD=""
+	export RANLIB=""
+	export CFLAGS=""
+	export CXXFLAGS=""
+}
+
 echo -e "${bold}Cleaning up${dim}"
 rm -rf include/libssh2/* lib/*
+rm -fr Android
 rm -fr Mac
 rm -fr iOS
 rm -fr tvOS
 rm -fr Catalyst
 
 mkdir -p lib
+mkdir -p Android
 mkdir -p Mac
 mkdir -p iOS
 mkdir -p tvOS
@@ -564,6 +619,12 @@ lipo \
 	"${LIBSSH2}/iOS-simulator/x86_64/lib/libssh2.a" \
 	"${LIBSSH2}/iOS-simulator/arm64/lib/libssh2.a" \
 	-create -output "${LIBSSH2}/lib/libssh2_iOS-simulator.a"
+
+echo -e "${bold}Building Android libraries${dim}"
+buildAndroid "android-arm"
+buildAndroid "android-arm64"
+buildAndroid "android-x86"
+buildAndroid "android-x86_64"
 
 echo -e "${bold}Building tvOS libraries${dim}"
 buildTVOS "arm64"

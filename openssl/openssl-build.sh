@@ -16,5 +16,8 @@ OPENSSL_VERSION="$VERSION" ./openssl-build-phase1.sh "$@"
 # Phase 2 - iOS
 OPENSSL_VERSION="$VERSION" ./openssl-build-phase2.sh "$@"
 
+# Phase 3 - Android
+OPENSSL_VERSION="$VERSION" ./openssl-build-phase3.sh "$@"
+
 # Done
 echo -e "${normal}Done"

@@ -35,6 +35,8 @@ trap 'echo -e "${alert}** ERROR with Build - Check /tmp/curl*.log${alertdim}"; t
 
 # Set defaults
 CURL_VERSION="curl-8.10.1"
+ANDROID_API_VERSION="28"		# Android API
+
 nohttp2="0"
 nolibssh2="2"
 catalyst="0"
@@ -639,11 +641,87 @@ buildTVOSsim()
 	export CPPFLAGS=""
 }
 
+buildAndroid()
+{
+	ARCH=$1
+	TARGET=$ARCH
+	ANDROID_API=$ANDROID_API_VERSION
+
+    if [ $ARCH == "android-arm" ]
+	then
+	    HOST=armv7a-linux-androideabi
+    elif [ $ARCH == "android-arm64" ]
+	then
+	    HOST=aarch64-linux-android
+    elif [ $ARCH == "android-x86" ]
+	then
+	    HOST=i686-linux-android
+    elif [ $ARCH == "android-x86_64" ]
+	then
+	    HOST=x86_64-linux-android
+    fi
+
+	export ANDROID_NDK_ROOT=$NDK_HOME
+	export CROSS_COMPILE=${HOST}-
+	export AR=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-ar
+	export CC=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/${HOST}${ANDROID_API}-clang
+	export CXX=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/${HOST}${ANDROID_API}-clang++
+	export LD=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/lld
+	export RANLIB=$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-ranlib
+	export CFLAGS="-fPIC"
+	export CXXFLAGS="-fPIC"
+
+	if [ $nohttp2 == "1" ]; then
+		NGHTTP2CFG="--with-nghttp2=${NGHTTP2}/Android/${ARCH}"
+		NGHTTP2LIB="-L${NGHTTP2}/Android/${ARCH}/lib"
+	else 
+		NGHTTP2CFG="--without-nghttp2"
+		NGHTTP2LIB=""
+	fi
+
+	if [ $nolibssh2 == "1" ]; then
+		LIBSSH2CFG="--with-libssh2=${LIBSSH2}/Android/${ARCH}"
+		LIBSSH2LIB="-L${LIBSSH2}/Android/${ARCH}/lib"
+	else 
+		LIBSSH2CFG="--without-libssh2"
+		LIBSSH2LIB=""
+	fi
+
+	SYSROOT="$NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+    export CPPFLAGS="-I$SYSROOT/usr/include --sysroot=$SYSROOT"
+	export LDFLAGS="-L${OPENSSL}/Android/${ARCH}/lib ${NGHTTP2LIB} ${LIBSSH2LIB}"
+
+	echo -e "${subbold}Building ${CURL_VERSION} for ${archbold}${ARCH}${dim} (Android)"
+
+	pushd . > /dev/null
+	cd "${CURL_VERSION}"
+	./configure --prefix="${CURL}/Android/${ARCH}" $CONF_FLAGS --with-ssl=${OPENSSL}/Android/${ARCH} ${NGHTTP2CFG} ${LIBSSH2CFG} --host=${HOST} --target=$HOST &> "/tmp/${CURL_VERSION}-${ARCH}.log"
+	make -j${CORES} >> "/tmp/${NGHTTP2_VERSION}-${ARCH}.log" 2>&1
+	make install >> "/tmp/${NGHTTP2_VERSION}-${ARCH}.log" 2>&1
+	make clean >> "/tmp/${NGHTTP2_VERSION}-${ARCH}.log" 2>&1
+	popd > /dev/null
+
+	# Clean up exports
+	export ANDROID_NDK_ROOT=""
+	export CROSS_COMPILE=""
+	export AR=""
+	export CC=""
+	export CXX=""
+	export LD=""
+	export RANLIB=""
+	export CFLAGS=""
+	export CXXFLAGS=""
+	export CPPFLAGS=""
+	export LDFLAGS=""
+}
+
 echo -e "${bold}Cleaning up${dim}"
 rm -rf include/curl/* lib/*
+rm -rf Android
 
 mkdir -p lib
 mkdir -p include/curl/
+mkdir -p Android
 
 rm -fr "/tmp/curl"
 rm -rf "/tmp/${CURL_VERSION}-*"
@@ -755,6 +833,12 @@ lipo \
 # 		"/tmp/${CURL_VERSION}-iOS-simulator-x86_64-nobitcode/lib/libcurl.a" \
 # 		-create -output lib/libcurl_iOS_nobitcode.a
 # fi
+
+echo -e "${bold}Building Android libraries${dim}"
+buildAndroid "android-arm"
+buildAndroid "android-arm64"
+buildAndroid "android-x86"
+buildAndroid "android-x86_64"
 
 echo -e "${bold}Building tvOS libraries${dim}"
 buildTVOS "arm64" "${BITCODE}"
