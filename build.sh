@@ -184,9 +184,9 @@ OSARGS="-s ${IOS_MIN_SDK_VERSION} -t ${TVOS_MIN_SDK_VERSION} -i ${MACOS_X86_64_V
 ## Welcome
 echo -e "${bold}Build-OpenSSL-cURL${dim}"
 if [ "$catalyst" != "" ]; then
-	echo "This script builds OpenSSL, nghttp2, libssh2 and libcurl for MacOS, Catalyst, iOS and tvOS devices."
+	echo "This script builds OpenSSL, nghttp2, libevent, libssh2 and libcurl for MacOS, Catalyst, iOS, tvOS and Android devices."
 else
-	echo "This script builds OpenSSL, nghttp2, libssh2 and libcurl for MacOS, iOS and tvOS devices."
+	echo "This script builds OpenSSL, nghttp2, libevent, libssh2 and libcurl for MacOS, iOS, tvOS and Android devices."
 fi
 echo "Targets: x86_64, armv7, armv7s, arm64 and arm64e"
 
@@ -271,7 +271,7 @@ echo -e "${subbold}libcurl (rename to libcurl.a)${normal} [${dim}$LIBCURL${norma
 xcrun -sdk iphoneos lipo -info curl/lib/*.a
 
 EXAMPLE="example/iOS Test App"
-ARCHIVE="archive/libcurl-$LIBCURL-openssl-$OPENSSL-nghttp2-$NGHTTP2"
+ARCHIVE="archive/libcurl-$LIBCURL-openssl-$OPENSSL-nghttp2-$NGHTTP2-libssh2-$LIBSSH2-libevent-$LIBEVENT"
 
 echo
 echo -e "${bold}Creating archive with XCFrameworks for release v$LIBCURL...${dim}"
@@ -495,6 +495,16 @@ curl -sL https://curl.se/ca/cacert.pem > $ARCHIVE/cacert.pem
 # create README for archive
 sed -e "s/ZZZCMDS/$BUILD_CMD/g" -e "s/ZZZLIBCURL/$LIBCURL/g" -e "s/ZZZOPENSSL/$OPENSSL/g" -e "s/ZZZNGHTTP2/$NGHTTP2/g" archive/release-template.md > $ARCHIVE/README.md
 echo
+
+# Create OpenSSL frameworks
+echo -e "${bold}Creating OpenSSL frameworks ...${dim}"
+mkdir -p $ARCHIVE/framework/iOS/openssl.framework/Headers
+libtool -no_warning_for_no_symbols -static -o $ARCHIVE/framework/iOS/openssl.framework/openssl $ARCHIVE/lib/iOS-fat/libcrypto.a $ARCHIVE/lib/iOS-fat/libssl.a
+cp -r $ARCHIVE/include/openssl/* $ARCHIVE/framework/iOS/openssl.framework/Headers/
+
+mkdir -p $ARCHIVE/framework/MacOS/openssl.framework/Headers
+libtool -no_warning_for_no_symbols -static -o $ARCHIVE/framework/MacOS/openssl.framework/openssl $ARCHIVE/lib/MacOS/libcrypto.a $ARCHIVE/lib/MacOS/libssl.a
+cp -r $ARCHIVE/include/openssl/* $ARCHIVE/framework/iOS/openssl.framework/Headers/
 
 # EXAMPLE App - update test app with latest includes and XCFrameworks
 echo -e "${bold}Copying libraries to Test App ...${dim}"
